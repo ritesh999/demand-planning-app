@@ -1,0 +1,13 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0 -- /opt/pyvenv/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/oai/share
+plugins: anyio-4.9.0
+collecting ... collected 4 items
+
+tests/test_forecast_models.py::test_exponential_smoothing_forecast_length PASSED [ 25%]
+tests/test_inventory_metrics.py::test_basic_inventory_metrics PASSED     [ 50%]
+tests/test_inventory_metrics.py::test_eoq_calculation PASSED             [ 75%]
+tests/test_prepare_series.py::test_prepare_time_series_defaults PASSED   [100%]
+
+============================== 4 passed in 2.01s ===============================
