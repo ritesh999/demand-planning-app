@@ -97,6 +97,15 @@ from scipy.stats import norm
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 from statsmodels.tsa.arima.model import ARIMA
 
+# -----------------------------------------------------------------------------
+# UI/UX configuration
+#
+# Configure the Streamlit page to use a wide layout and set a descriptive title.
+# Setting the page configuration early ensures that the layout is applied before
+# any widgets are rendered.
+#
+st.set_page_config(page_title="Demand Planning Application", page_icon="📈", layout="wide")
+
 
 def load_data_from_upload() -> Optional[pd.DataFrame]:
     """Load a CSV or Excel file uploaded by the user.
@@ -337,27 +346,78 @@ def render_forecast_chart(
 
 
 def main() -> None:
-    st.set_page_config(page_title="Demand Planning App", layout="wide")
+    # Main page header and instructions
     st.title("📈 Demand Planning for Construction Consulting")
-    st.write(
-        "This application helps construction consulting firms forecast demand, "
-        "optimise inventory and allocate resources. Upload your historical demand "
-        "data, choose a forecasting model, and explore inventory metrics.")
+    st.markdown(
+        "This application helps construction consulting firms forecast demand, optimise inventory "
+        "and allocate resources. Use the navigation menu to upload data, run forecasts, analyse "
+        "inventory metrics or view documentation."
+    )
 
     # Sidebar for navigation and input
     st.sidebar.header("Navigation")
-    section = st.sidebar.radio("Go to", [
-        "Data Upload", "Forecasting", "Inventory Optimisation", "About"
-    ])
+    section = st.sidebar.radio(
+        "Go to", [
+            "Dashboard",
+            "Data Upload",
+            "Forecasting",
+            "Inventory Optimisation",
+            "About",
+        ]
+    )
 
-    # Placeholder for loaded data
+    # Cached data from previous interactions
     data: Optional[pd.DataFrame] = st.session_state.get("data")
     series: Optional[pd.Series] = st.session_state.get("series")
     forecast: Optional[pd.Series] = st.session_state.get("forecast")
     fitted: Optional[pd.Series] = st.session_state.get("fitted")
 
+    # Dashboard section
+    if section == "Dashboard":
+        st.header("Overview Dashboard")
+        if data is None:
+            st.info(
+                "No dataset loaded. Please upload data in the 'Data Upload' section to see an overview of your demand."
+            )
+        else:
+            # Display basic dataset statistics
+            st.subheader("Data Summary")
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Rows", f"{data.shape[0]:,}")
+            col2.metric("Columns", f"{data.shape[1]:,}")
+            # Count numeric columns for quick insight
+            numeric_cols = data.select_dtypes(include=[np.number]).columns
+            col3.metric("Numeric Columns", f"{len(numeric_cols)}")
+
+            # Show a preview of the data
+            with st.expander("Preview data", expanded=False):
+                st.dataframe(data.head())
+
+            # Attempt to plot a simple trend if date and numeric columns are present
+            date_candidates = [c for c in data.columns if "date" in c.lower() or data[c].dtype == "datetime64[ns]"]
+            if date_candidates and numeric_cols.any():
+                date_col = date_candidates[0]
+                demand_col = numeric_cols[0]
+                try:
+                    df = data[[date_col, demand_col]].copy()
+                    df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
+                    df = df.dropna()
+                    df_grouped = df.groupby(date_col)[demand_col].sum().reset_index()
+                    line_fig = px.line(
+                        df_grouped,
+                        x=date_col,
+                        y=demand_col,
+                        title="Historical Demand Overview",
+                        labels={date_col: "Date", demand_col: "Demand"},
+                    )
+                    st.plotly_chart(line_fig, use_container_width=True)
+                except Exception:
+                    st.info("Unable to automatically detect a date and numeric column for plotting.")
+            else:
+                st.info("To see visual trends, ensure your dataset contains a date column and at least one numeric column.")
+
     # Data upload section
-    if section == "Data Upload":
+    elif section == "Data Upload":
         st.header("Upload Data")
         st.markdown(
             "You can either upload a CSV file or configure a database connection. "
