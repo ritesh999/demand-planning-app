@@ -99,13 +99,22 @@ from statsmodels.tsa.arima.model import ARIMA
 
 
 def load_data_from_upload() -> Optional[pd.DataFrame]:
-    """Load a CSV file uploaded by the user.
+    """Load a CSV or Excel file uploaded by the user.
 
-    Returns ``None`` when no file has been uploaded.
+    This helper accepts comma‑separated files (``*.csv``) as well as Excel
+    workbooks (``*.xlsx`` and ``*.xls``).  It attempts to parse the file
+    with ``pandas.read_csv`` first for CSV; otherwise falls back to
+    ``pandas.read_excel``.  Invalid or unsupported files result in an
+    error message and return ``None``.
+
+    Returns
+    -------
+    pandas.DataFrame or ``None``
+        Parsed tabular data when a file is provided, otherwise ``None``.
     """
     uploaded_file = st.file_uploader(
-        "Upload a CSV file containing your demand history",
-        type=["csv"],
+        "Upload a CSV or Excel file containing your demand history",
+        type=["csv", "xlsx", "xls"],
         help=(
             "The file should contain at least a date column and a demand column. "
             "Additional features such as promotions or holidays may also be included."
@@ -113,8 +122,20 @@ def load_data_from_upload() -> Optional[pd.DataFrame]:
     )
     if uploaded_file is None:
         return None
-    # Let pandas infer the delimiter and parse dates when possible
-    data = pd.read_csv(uploaded_file)
+    # Use the filename extension to decide how to load the file
+    filename = uploaded_file.name.lower()
+    try:
+        if filename.endswith(('.csv', '.tsv')):
+            data = pd.read_csv(uploaded_file)
+        elif filename.endswith(('.xlsx', '.xls')):
+            # openpyxl or xlrd engine will be used automatically
+            data = pd.read_excel(uploaded_file)
+        else:
+            st.error("Unsupported file type. Please upload a CSV or Excel file.")
+            return None
+    except Exception as e:
+        st.error(f"Failed to read file: {e}")
+        return None
     return data
 
 
