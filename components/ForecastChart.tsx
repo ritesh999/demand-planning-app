@@ -66,7 +66,7 @@ export default function ForecastChart({ result }: ForecastChartProps) {
         />
         <YAxis tick={{ fontSize: 11 }} width={60} />
         <Tooltip
-          formatter={(val: number | null) => (val != null ? val.toFixed(1) : '—')}
+          formatter={(val: any) => (val != null ? Number(val).toFixed(1) : '—')}
           labelFormatter={(l: string) => new Date(l).toLocaleDateString('en-GB')}
         />
         <Legend wrapperStyle={{ fontSize: 12 }} />
