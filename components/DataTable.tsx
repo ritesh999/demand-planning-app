@@ -3,7 +3,7 @@
 export interface TableColumn {
   key: string;
   header: string;
-  format?: (v: unknown) => string;
+  format?: (v: any) => string;
 }
 
 interface DataTableProps {
