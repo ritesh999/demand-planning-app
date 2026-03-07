@@ -28,12 +28,10 @@ export default function ForecastChart({ result }: ForecastChartProps) {
   const loMap    = new Map((confidenceLower ?? []).map(d => [d.date, d.value]));
   const hiMap    = new Map((confidenceUpper ?? []).map(d => [d.date, d.value]));
 
-  const allDates = [
-    ...new Set([
-      ...historical.map(d => d.date),
-      ...forecast.map(d => d.date),
-    ]),
-  ].sort();
+  const allDates = Array.from(new Set([
+    ...historical.map(d => d.date),
+    ...forecast.map(d => d.date),
+  ])).sort();
 
   const firstFcstDate = forecast[0]?.date;
 
