@@ -3,7 +3,6 @@
 export interface TableColumn {
   key: string;
   header: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   format?: (v: any) => string;
 }
 
